@@ -1,0 +1,46 @@
+# Git files
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+universal-service
+universal-service_*
+
+# Test files
+*_test.go
+coverage.out
+coverage.html
+
+# Development files
+.env
+.env.local
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.log
+*.pid
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Docker files (avoid recursion)
+Dockerfile*
+.dockerignore
+
+# Make build artifacts
+bin/

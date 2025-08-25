@@ -1,0 +1,56 @@
+server:
+  host: "0.0.0.0"
+  port: ${PORT:-8080}
+  read_timeout: 30s
+  write_timeout: 30s
+  idle_timeout: 120s
+
+app:
+  name: "${APP_NAME:-universal-service}"
+  version: "${APP_VERSION:-1.0.0}"
+  debug: false
+
+providers:
+  logger:
+    type: "structured"
+    level: "${LOG_LEVEL:-info}"
+    service_name: "${SERVICE_NAME:-universal-service}"
+    format: "json"
+    fields:
+      environment: "production"
+
+  metrics:
+    type: "prometheus"
+    enabled: ${METRICS_ENABLED:-true}
+    port: ${METRICS_PORT:-9090}
+    path: "/metrics"
+    service_name: "${SERVICE_NAME:-universal-service}"
+
+  auth:
+    type: "jwt"
+    secret: "${AUTH_SECRET}"
+    algorithm: "HS256"
+    access_ttl: "${AUTH_ACCESS_TTL:-1h}"
+    refresh_ttl: "${AUTH_REFRESH_TTL:-24h}"
+
+  cache:
+    type: "${CACHE_TYPE:-redis}"
+    address: "${CACHE_ADDRESS:-redis://localhost:6379}"
+    password: "${CACHE_PASSWORD:-}"
+    database: ${CACHE_DATABASE:-0}
+    pool_size: ${CACHE_POOL_SIZE:-10}
+    default_ttl: "${CACHE_DEFAULT_TTL:-1h}"
+
+  database:
+    type: "postgres"
+    host: "${DB_HOST}"
+    port: ${DB_PORT:-5432}
+    username: "${DB_USERNAME}"
+    password: "${DB_PASSWORD}"
+    database: "${DB_DATABASE}"
+    ssl_mode: "${DB_SSL_MODE:-require}"
+    timezone: "${DB_TIMEZONE:-UTC}"
+    max_open_conns: ${DB_MAX_OPEN_CONNS:-25}
+    max_idle_conns: ${DB_MAX_IDLE_CONNS:-10}
+    conn_max_lifetime: "${DB_CONN_MAX_LIFETIME:-1h}"
+    conn_max_idle_time: "${DB_CONN_MAX_IDLE_TIME:-30m}"

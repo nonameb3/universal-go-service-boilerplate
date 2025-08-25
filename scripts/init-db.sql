@@ -1,0 +1,2 @@
+-- Universal Go Service Database Initialization
+-- This script sets up the basic database structure

@@ -1,0 +1,42 @@
+server:
+  host: "localhost"
+  port: 0 # Use random available port for testing
+  read_timeout: 10s
+  write_timeout: 10s
+  idle_timeout: 30s
+
+app:
+  name: "universal-service-test"
+  version: "1.0.0-test"
+  debug: false
+
+providers:
+  logger:
+    type: "noop"  # No logging in tests by default
+    level: "error"
+    service_name: "universal-service-test"
+
+  metrics:
+    type: "noop"  # No metrics in tests
+    enabled: false
+
+  auth:
+    type: "simple"
+    secret: "test-secret-key"
+    algorithm: "HS256"
+
+  cache:
+    type: "memory"
+    default_ttl: "1m"
+
+  database:
+    type: "postgres"
+    host: "localhost"
+    port: 5432
+    username: "postgres"
+    password: "password"
+    database: "universal_service_test"
+    ssl_mode: "disable"
+    timezone: "UTC"
+    max_open_conns: 5
+    max_idle_conns: 2
