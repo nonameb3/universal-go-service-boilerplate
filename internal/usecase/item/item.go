@@ -9,7 +9,7 @@ type itemUseCase struct {
 	itemRepo repository.ItemRepo
 }
 
-func NewItemUsecase(itemRepo repository.ItemRepo) ItemUsecase {
+func NewItemUseCase(itemRepo repository.ItemRepo) ItemUseCase {
 	return &itemUseCase{itemRepo: itemRepo}
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/universal-go-service/boilerplate/cmd/migrations"
 	"github.com/universal-go-service/boilerplate/config"
+	"github.com/universal-go-service/boilerplate/internal/app"
 	"github.com/universal-go-service/boilerplate/pkg/providers/database"
 )
 
@@ -57,19 +58,5 @@ func main() {
 		}
 	}
 
-	fmt.Printf("🚀 Next steps to build your service:\n")
-	fmt.Printf("   1. Add your domain entities to internal/domain/\n")
-	fmt.Printf("   2. Create use cases in internal/usecase/\n")
-	fmt.Printf("   3. Implement repositories in internal/repository/\n")
-	fmt.Printf("   4. Add HTTP handlers in internal/handler/\n")
-	fmt.Printf("   5. Replace default providers with your company's libraries\n\n")
-
-	fmt.Printf("🔧 To integrate your company's libraries:\n")
-	fmt.Printf("   • Create provider implementations in pkg/providers/\n")
-	fmt.Printf("   • Register them in the factory system\n")
-	fmt.Printf("   • Update configuration files\n")
-	fmt.Printf("   • No code changes needed elsewhere!\n\n")
-
-	fmt.Printf("💡 Example: TokenX Logger Integration\n")
-	fmt.Printf("   See examples/company-logger/ for a complete example\n")
+	app.Run(cfg)
 }
