@@ -21,6 +21,6 @@ func NewRouter(app *fiber.App, itemUseCase usecase.ItemUseCase, l appLog.Logger)
 	// Initialize V1 Router
 	apiV1Group := app.Group("/api/v1")
 	{
-		v1.NewItemRouter(apiV1Group, itemUseCase, l)
+		v1.SetupRoutes(apiV1Group, itemUseCase, l)
 	}
 }
