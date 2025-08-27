@@ -6,18 +6,16 @@ import (
 	"gorm.io/gorm"
 )
 
-var config = logger.LoggerConfig{
-	Type:        "universal-go",
-	ServiceName: "item-service",
-}
-var log = logger.NewCentralizedLogger(config)
-
 type itemRepository struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger logger.Logger
 }
 
-func NewItemRepository(db *gorm.DB) ItemRepository {
-	return &itemRepository{db: db}
+func NewItemRepository(db *gorm.DB, logger logger.Logger) ItemRepository {
+	return &itemRepository{
+		db:     db,
+		logger: logger,
+	}
 }
 
 func (r *itemRepository) Create(item *domain.Item) error {
@@ -27,7 +25,7 @@ func (r *itemRepository) Create(item *domain.Item) error {
 func (r *itemRepository) Get(id string) (*domain.Item, error) {
 	item := &domain.Item{}
 	if err := r.db.Where("id = ?", id).First(item).Error; err != nil {
-		log.Error("failed to get item", err)
+		r.logger.Error("failed to get item", err)
 		return nil, err
 	}
 	return item, nil
