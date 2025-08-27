@@ -3,7 +3,6 @@ package http
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/universal-go-service/boilerplate/internal/handler/http/middleware"
@@ -17,16 +16,6 @@ func NewRouter(app *fiber.App, itemUseCase usecase.ItemUseCase, l appLog.Logger)
 	app.Use(compress.New())
 	app.Use(helmet.New())
 	app.Use(logger.New())
-	app.Use(healthcheck.New(healthcheck.Config{
-		LivenessProbe: func(c *fiber.Ctx) bool {
-			return true
-		},
-		LivenessEndpoint: "/health",
-		ReadinessProbe: func(c *fiber.Ctx) bool {
-			return true
-		},
-		ReadinessEndpoint: "/health",
-	}))
 	app.Use(middleware.Recovery(l))
 
 	// Initialize V1 Router

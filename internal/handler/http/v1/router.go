@@ -8,8 +8,8 @@ import (
 
 func NewItemRouter(apiV1Group fiber.Router, itemUseCase usecase.ItemUseCase, l logger.Logger) {
 	itemHandler := &V1{
-		t: itemUseCase,
-		l: l,
+		iUC: itemUseCase,
+		l:   l,
 	}
 
 	itemGroup := apiV1Group.Group("/items")

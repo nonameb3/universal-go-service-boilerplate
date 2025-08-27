@@ -3,8 +3,8 @@ package domain
 import "time"
 
 type BaseEntity struct {
-	Id        uint32     `gorm:"primary_key;autoIncrement"`
-	CreatedAt time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
-	DeletedAt *time.Time `gorm:"index;default:null"`
+	Id        uint       `gorm:"primary_key;autoIncrement" json:"id"`
+	CreatedAt time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP" json:"updated_at"`
+	DeletedAt *time.Time `gorm:"index;default:null" json:"deleted_at,omitempty"`
 }

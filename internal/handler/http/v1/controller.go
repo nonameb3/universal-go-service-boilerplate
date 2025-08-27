@@ -7,6 +7,6 @@ import (
 
 // V1 -.
 type V1 struct {
-	t usecase.ItemUseCase
-	l logger.Logger
+	iUC usecase.ItemUseCase
+	l   logger.Logger
 }

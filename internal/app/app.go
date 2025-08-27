@@ -1,6 +1,8 @@
 package app
 
 import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/universal-go-service/boilerplate/config"
 	"github.com/universal-go-service/boilerplate/internal/handler/http"
 	"github.com/universal-go-service/boilerplate/internal/repository/item"
@@ -40,6 +42,20 @@ func Run(cfg *config.Config) {
 
 	// Initial Server
 	httpServer := httpserver.New(cfg.Server.Port)
+
+	// Initial HealthCheck Middleware
+	httpServer.App.Use(healthcheck.New(healthcheck.Config{
+		LivenessProbe: func(c *fiber.Ctx) bool {
+			return true
+		},
+		LivenessEndpoint: "/health",
+		ReadinessProbe: func(c *fiber.Ctx) bool {
+			// Check database connection
+			err := pg.Health()
+			return err == nil
+		},
+		ReadinessEndpoint: "/health",
+	}))
 
 	// Initial Router
 	http.NewRouter(httpServer.App, itemUseCase, l)
