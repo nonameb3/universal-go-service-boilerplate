@@ -122,38 +122,38 @@ Edit `config/environments/{environment}.yaml` to match your needs.
 
 ## 🔧 **Company Integration**
 
-### **Example: TokenX Logger Integration**
+### **Example: Universal-Go Logger Integration**
 
 ```go
-// examples/tokenx-logger/tokenx_logger.go
-type TokenXLogger struct {
-    tkxLogger *logrus.Logger
+// examples/universal-go-logger/universal_logger.go
+type UniversalGoLogger struct {
+    ugoLogger *logrus.Logger
 }
 
-func NewTokenXLogger(config LoggerConfig) (Logger, error) {
-    tkxLogger := tkxLogger.NewTkxLogger(tkxLogger.LoggerConfig{
+func NewUniversalGoLogger(config LoggerConfig) (Logger, error) {
+    ugoLogger := ugoLogger.NewUgoLogger(ugoLogger.LoggerConfig{
         ServiceName: config.ServiceName,
-        LogLevel:    tkxLoggerConstants.InfoLevel,
+        LogLevel:    ugoLoggerConstants.InfoLevel,
     })
     
-    return &TokenXLogger{tkxLogger: tkxLogger}, nil
+    return &UniversalGoLogger{ugoLogger: ugoLogger}, nil
 }
 
 // Implements the universal Logger interface
-func (t *TokenXLogger) Info(msg string, fields ...Field) {
-    t.tkxLogger.WithFields(convertFields(fields)).Info(msg)
+func (u *UniversalGoLogger) Info(msg string, fields ...Field) {
+    u.ugoLogger.WithFields(convertFields(fields)).Info(msg)
 }
 ```
 
 ### **Register Your Implementation**
 ```go
 // Register once at startup
-providers.RegisterCustomLogger("tokenx", NewTokenXLogger)
+providers.RegisterCustomLogger("universal-go", NewUniversalGoLogger)
 
 // Use everywhere via configuration
 config:
   logger:
-    type: "tokenx"  # Now uses your TokenX logger!
+    type: "universal-go"  # Now uses your Universal-Go logger!
 ```
 
 ### **Zero Code Changes Needed**
@@ -194,7 +194,7 @@ logger.Info("User created",
 - **Compliance requirements** with centralized logging/monitoring
 
 ### **🏢 Company Examples:**
-- **TokenX**: Drop in `tkx-golang-log-library` 
+- **Universal-Go**: Drop in `universal-go-log-library` 
 - **Any FinTech**: Integrate compliance logging
 - **Enterprise**: Connect to centralized auth/metrics
 - **Startup**: Start simple, scale with company growth
@@ -340,4 +340,4 @@ MIT License - Use this however you want, wherever you want!
 
 *"Our team went from struggling with Go project structure to shipping production services in weeks. The clean architecture patterns are exactly what we needed."* - Lead Developer, Enterprise SaaS
 
-*"The configuration-driven approach made it trivial to integrate our company's centralized libraries. Zero learning curve for the team."* - Platform Engineer, TokenX
+*"The configuration-driven approach made it trivial to integrate our company's centralized libraries. Zero learning curve for the team."* - Platform Engineer, Universal-Go

@@ -7,7 +7,7 @@ import (
 )
 
 var config = logger.LoggerConfig{
-	Type:        "tokenx",
+	Type:        "universal-go",
 	ServiceName: "item-service",
 }
 var log = logger.NewCentralizedLogger(config)

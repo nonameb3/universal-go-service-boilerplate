@@ -34,7 +34,7 @@ func NewCentralizedLogger(config LoggerConfig) Logger {
 // Info logs an info message through Centralized Logging's centralized system
 func (t *CentralizedLogger) Info(msg string, fields ...types.Field) {
 	// Demo implementation:
-	fmt.Printf("[TokenX Logger] INFO: %s | service=%s", msg, t.serviceName)
+	fmt.Printf("[Universal-Go Logger] INFO: %s | service=%s", msg, t.serviceName)
 	if t.correlationID != "" {
 		fmt.Printf(" | correlation_id=%s", t.correlationID)
 	}
@@ -47,7 +47,7 @@ func (t *CentralizedLogger) Info(msg string, fields ...types.Field) {
 // Error logs an error message through Centralized Logging's centralized system
 func (t *CentralizedLogger) Error(msg string, err error, fields ...types.Field) {
 	// Demo implementation:
-	fmt.Printf("[TokenX Logger] ERROR: %s | service=%s", msg, t.serviceName)
+	fmt.Printf("[Universal-Go Logger] ERROR: %s | service=%s", msg, t.serviceName)
 	if t.correlationID != "" {
 		fmt.Printf(" | correlation_id=%s", t.correlationID)
 	}
@@ -63,7 +63,7 @@ func (t *CentralizedLogger) Error(msg string, err error, fields ...types.Field) 
 // Debug logs a debug message (Centralized Logging might filter based on environment)
 func (t *CentralizedLogger) Debug(msg string, fields ...types.Field) {
 	// Demo implementation:
-	fmt.Printf("[TokenX Logger] DEBUG: %s | service=%s", msg, t.serviceName)
+	fmt.Printf("[Universal-Go Logger] DEBUG: %s | service=%s", msg, t.serviceName)
 	if t.correlationID != "" {
 		fmt.Printf(" | correlation_id=%s", t.correlationID)
 	}
@@ -76,7 +76,7 @@ func (t *CentralizedLogger) Debug(msg string, fields ...types.Field) {
 // Warn logs a warning message
 func (t *CentralizedLogger) Warn(msg string, fields ...types.Field) {
 	// Demo implementation:
-	fmt.Printf("[TokenX Logger] WARN: %s | service=%s", msg, t.serviceName)
+	fmt.Printf("[Universal-Go Logger] WARN: %s | service=%s", msg, t.serviceName)
 	if t.correlationID != "" {
 		fmt.Printf(" | correlation_id=%s", t.correlationID)
 	}
@@ -117,34 +117,34 @@ func (t *CentralizedLogger) WithFields(fields ...types.Field) Logger {
 	}
 }
 
-// Example: How TokenX would register and use their logger
+// Example: How Universal-Go would register and use their logger
 
 // func main() {
-// 	fmt.Println("🏢 TokenX Logger Integration Example")
+// 	fmt.Println("🏢 Universal-Go Logger Integration Example")
 // 	fmt.Println("=====================================\n")
 
-// 	// 1. TokenX registers their logger implementation
-// 	fmt.Println("1️⃣ Register TokenX logger implementation:")
-// 	fmt.Println("   providers.RegisterCustomLogger(\"tokenx\", NewTokenXLogger)")
+// 	// 1. Universal-Go registers their logger implementation
+// 	fmt.Println("1️⃣ Register Universal-Go logger implementation:")
+// 	fmt.Println("   providers.RegisterCustomLogger(\"universal-go\", NewUniversal-GoLogger)")
 
-// 	// 2. Update configuration to use TokenX logger
+// 	// 2. Update configuration to use Universal-Go logger
 // 	fmt.Println("\n2️⃣ Update config/environments/production.yaml:")
 // 	fmt.Println(`   providers:
 //      logger:
-//        type: "tokenx"
+//        type: "universal-go"
 //        service_name: "user-service"`)
 
 // 	// 3. Business logic uses the universal interface - no changes needed!
 // 	fmt.Println("\n3️⃣ Business logic remains unchanged:")
 // 	config := LoggerConfig{
-// 		Type:        "tokenx",
+// 		Type:        "universal-go",
 // 		ServiceName: "user-service",
 // 	}
 
-// 	logger, _ := NewTokenXLogger(config)
+// 	logger, _ := NewUniversal-GoLogger(config)
 
 // 	// This is how your business logic would use logging - same interface,
-// 	// but now it goes through TokenX's centralized system to OpenSearch!
+// 	// but now it goes through Universal-Go's centralized system to OpenSearch!
 // 	logger = logger.WithCorrelationID("req-abc-123")
 
 // 	logger.Info("User login successful",
@@ -156,7 +156,7 @@ func (t *CentralizedLogger) WithFields(fields ...types.Field) Logger {
 // 		types.Field{Key: "database", Value: "users-db"},
 // 		types.Field{Key: "retry_count", Value: 3})
 
-// 	fmt.Println("\n✅ Benefits for TokenX:")
+// 	fmt.Println("\n✅ Benefits for Universal-Go:")
 // 	fmt.Printf("   • All logs automatically go to OpenSearch\n")
 // 	fmt.Printf("   • Consistent format across all Go services\n")
 // 	fmt.Printf("   • No code changes in business logic\n")
@@ -165,6 +165,6 @@ func (t *CentralizedLogger) WithFields(fields ...types.Field) Logger {
 
 // 	fmt.Println("\n🔄 Easy Migration:")
 // 	fmt.Printf("   • Deploy with simple logger first\n")
-// 	fmt.Printf("   • Change config to use TokenX logger\n")
+// 	fmt.Printf("   • Change config to use Universal-Go logger\n")
 // 	fmt.Printf("   • Restart service - no code deployment needed!\n")
 // }
