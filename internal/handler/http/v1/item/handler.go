@@ -7,6 +7,7 @@ import (
 	"github.com/universal-go-service/boilerplate/internal/domain"
 	"github.com/universal-go-service/boilerplate/internal/handler/http/v1/request"
 	"github.com/universal-go-service/boilerplate/internal/usecase"
+	itemUseCase "github.com/universal-go-service/boilerplate/internal/usecase/item"
 	logger "github.com/universal-go-service/boilerplate/pkg/providers/logger"
 )
 
@@ -26,145 +27,175 @@ func New(itemUseCase usecase.ItemUseCase, logger logger.Logger) *Handler {
 
 // CreateItem creates a new item
 func (h *Handler) CreateItem(c *fiber.Ctx) error {
-	reqBody := new(request.AddItem)
-
-	if err := c.BodyParser(reqBody); err != nil {
-		h.logger.Error("Request Error", err)
+	// HTTP request parsing
+	var httpReq request.AddItem
+	if err := c.BodyParser(&httpReq); err != nil {
+		h.logger.Error("Request parsing error", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "bad request",
+			"error": "invalid request format",
 		})
 	}
 
-	createItem, err := h.itemUseCase.Create(&domain.Item{
-		Amount: reqBody.Amount,
-		Name:   reqBody.Name,
-	})
+	// Convert HTTP request to UseCase request
+	useCaseReq := &itemUseCase.CreateItemRequest{
+		Name:   httpReq.Name,
+		Amount: httpReq.Amount,
+	}
 
+	// Delegate ALL business logic to UseCase
+	item, err := h.itemUseCase.Create(useCaseReq)
 	if err != nil {
-		h.logger.Error("Create item error", err)
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "internal server error",
-		})
+		return h.handleError(c, err)
 	}
 
-	return c.Status(http.StatusCreated).JSON(createItem)
+	// HTTP response formatting
+	return c.Status(http.StatusCreated).JSON(item)
 }
 
 // GetItem retrieves an item by ID
 func (h *Handler) GetItem(c *fiber.Ctx) error {
-	params := new(request.GetItem)
-
-	if err := c.ParamsParser(params); err != nil {
-		h.logger.Error("Request Error", err)
+	// HTTP parameter parsing
+	id := c.Params("id")
+	if id == "" {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "bad request",
+			"error": "id parameter is required",
 		})
 	}
 
-	item, err := h.itemUseCase.Get(params.Id)
+	// Delegate ALL business logic to UseCase
+	item, err := h.itemUseCase.Get(id)
 	if err != nil {
-		h.logger.Error("Get item error", err)
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
-			"error": "item not found",
-		})
+		return h.handleError(c, err)
 	}
 
+	// HTTP response formatting
 	return c.Status(http.StatusOK).JSON(item)
 }
 
 // ListItems retrieves items with pagination
 func (h *Handler) ListItems(c *fiber.Ctx) error {
-	params := new(request.ListItems)
-
-	if err := c.QueryParser(params); err != nil {
-		h.logger.Error("Request Error", err)
+	// HTTP query parameter parsing
+	var httpReq request.ListItems
+	if err := c.QueryParser(&httpReq); err != nil {
+		h.logger.Error("Query parsing error", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "bad request",
+			"error": "invalid query parameters",
 		})
 	}
 
-	// Set defaults
-	if params.Page <= 0 {
-		params.Page = 1
-	}
-	if params.Limit <= 0 {
-		params.Limit = 10
+	// Convert HTTP request to UseCase request
+	useCaseReq := &itemUseCase.PaginationRequest{
+		Page:  httpReq.Page,
+		Limit: httpReq.Limit,
 	}
 
-	items, err := h.itemUseCase.GetWithPagination(params.Page, params.Limit)
+	// Delegate ALL business logic (including defaults) to UseCase
+	items, err := h.itemUseCase.GetWithPagination(useCaseReq)
 	if err != nil {
-		h.logger.Error("Get paginated items error", err)
+		return h.handleError(c, err)
+	}
+
+	// HTTP response formatting
+	return c.Status(http.StatusOK).JSON(items)
+}
+
+// UpdateItem updates an existing item
+func (h *Handler) UpdateItem(c *fiber.Ctx) error {
+	// HTTP parameter parsing
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "id parameter is required",
+		})
+	}
+
+	// HTTP body parsing
+	var httpReq request.UpdateItem
+	if err := c.BodyParser(&httpReq); err != nil {
+		h.logger.Error("Request parsing error", err)
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid request format",
+		})
+	}
+
+	// Convert HTTP request to UseCase request
+	useCaseReq := &itemUseCase.UpdateItemRequest{
+		Name:   httpReq.Name,
+		Amount: httpReq.Amount,
+	}
+
+	// Delegate ALL business logic to UseCase
+	updatedItem, err := h.itemUseCase.Update(id, useCaseReq)
+	if err != nil {
+		return h.handleError(c, err)
+	}
+
+	// HTTP response formatting
+	return c.Status(http.StatusOK).JSON(updatedItem)
+}
+
+// DeleteItem deletes an existing item
+func (h *Handler) DeleteItem(c *fiber.Ctx) error {
+	// HTTP parameter parsing
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "id parameter is required",
+		})
+	}
+
+	// Delegate ALL business logic to UseCase
+	if err := h.itemUseCase.Delete(id); err != nil {
+		return h.handleError(c, err)
+	}
+
+	// HTTP response formatting
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "item deleted successfully",
+		"id":      id,
+	})
+}
+
+// handleError maps business errors to appropriate HTTP responses
+func (h *Handler) handleError(c *fiber.Ctx, err error) error {
+	h.logger.Error("Handler error occurred", err)
+
+	// Map domain errors to HTTP status codes
+	switch err {
+	case domain.ErrItemNotFound:
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "item not found",
+		})
+
+	case domain.ErrItemNameRequired:
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "item name is required",
+		})
+
+	case domain.ErrItemNameTooLong:
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "item name cannot exceed 100 characters",
+		})
+
+	case domain.ErrItemAmountTooLarge:
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "item amount cannot exceed 999999",
+		})
+
+	case domain.ErrInvalidPagination:
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "invalid pagination parameters",
+		})
+
+	case domain.ErrLimitTooLarge:
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "limit cannot exceed 100",
+		})
+
+	default:
+		// Generic server error for unknown errors
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": "internal server error",
 		})
 	}
-
-	return c.Status(http.StatusOK).JSON(items)
-}
-
-func (h *Handler) UpdateItem(c *fiber.Ctx) error {
-	params := new(request.GetItem)
-	body := new(request.UpdateItem)
-
-	if err := c.ParamsParser(params); err != nil {
-		h.logger.Error("Request Error", err)
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "bad request: params id is invalid",
-		})
-	}
-
-	// get item
-	existingItem, err := h.itemUseCase.Get(params.Id)
-	if err != nil {
-		h.logger.Error("Get item error", err)
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
-			"error": "item not found",
-		})
-	}
-
-	// Update only provided fields
-	if body.Name != nil {
-		existingItem.Name = *body.Name
-	}
-	if body.Amount != nil {
-		existingItem.Amount = *body.Amount
-	}
-
-	// Update the existing item
-	updatedItem, err := h.itemUseCase.Update(existingItem)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "update failed"})
-	}
-
-	return c.Status(http.StatusOK).JSON(updatedItem)
-}
-
-func (h *Handler) DeleteItem(c *fiber.Ctx) error {
-	params := new(request.GetItem)
-
-	if err := c.ParamsParser(params); err != nil {
-		h.logger.Error("Request Error", err)
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "bad request: params id is invalid",
-		})
-	}
-
-	// get item
-	_, err := h.itemUseCase.Get(params.Id)
-	if err != nil {
-		h.logger.Error("Get item error", err)
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
-			"error": "item not found",
-		})
-	}
-
-	// delete item
-	if err := h.itemUseCase.Delete(params.Id); err != nil {
-		h.logger.Error("Delete item error", err)
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "delete item error",
-		})
-	}
-
-	return c.Status(http.StatusOK).JSON(params)
 }

@@ -89,3 +89,6 @@ deployments/kubernetes/*.generated.yaml
 
 # go package
 go.sum
+
+# LLM
+CLAUDE.md
