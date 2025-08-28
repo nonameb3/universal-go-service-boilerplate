@@ -72,6 +72,36 @@ func (h *Handler) GetItem(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).JSON(item)
 }
 
+// ListItems retrieves items with pagination
+func (h *Handler) ListItems(c *fiber.Ctx) error {
+	params := new(request.ListItems)
+
+	if err := c.QueryParser(params); err != nil {
+		h.logger.Error("Request Error", err)
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "bad request",
+		})
+	}
+
+	// Set defaults
+	if params.Page <= 0 {
+		params.Page = 1
+	}
+	if params.Limit <= 0 {
+		params.Limit = 10
+	}
+
+	items, err := h.itemUseCase.GetWithPagination(params.Page, params.Limit)
+	if err != nil {
+		h.logger.Error("Get paginated items error", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "internal server error",
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(items)
+}
+
 func (h *Handler) UpdateItem(c *fiber.Ctx) error {
 	params := new(request.GetItem)
 	body := new(request.UpdateItem)

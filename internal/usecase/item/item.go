@@ -21,6 +21,10 @@ func (uc *itemUseCase) Get(id string) (*domain.Item, error) {
 	return uc.itemRepo.Get(id)
 }
 
+func (uc *itemUseCase) GetWithPagination(page, limit int) (*domain.PaginatedResult[*domain.Item], error) {
+	return uc.itemRepo.GetWithPagination(page, limit)
+}
+
 func (uc *itemUseCase) Update(item *domain.Item) (*domain.Item, error) {
 	return uc.itemRepo.Update(item)
 }

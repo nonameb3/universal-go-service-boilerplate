@@ -13,3 +13,8 @@ type UpdateItem struct {
 	Name   *string `json:"name,omitempty"`
 	Amount *uint   `json:"amount,omitempty"`
 }
+
+type ListItems struct {
+	Page  int `query:"page" json:"page"`
+	Limit int `query:"limit" json:"limit"`
+}

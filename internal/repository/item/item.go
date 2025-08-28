@@ -43,6 +43,37 @@ func (r *itemRepository) Update(item *domain.Item) (*domain.Item, error) {
 	return item, nil
 }
 
+func (r *itemRepository) GetWithPagination(page, limit int) (*domain.PaginatedResult[*domain.Item], error) {
+	var items []*domain.Item
+	var total int64
+
+	// Count total records
+	if err := r.db.Model(&domain.Item{}).Count(&total).Error; err != nil {
+		r.logger.Error("failed to count items", err)
+		return nil, err
+	}
+
+	// Calculate offset
+	offset := (page - 1) * limit
+
+	// Get paginated items
+	if err := r.db.Offset(offset).Limit(limit).Find(&items).Error; err != nil {
+		r.logger.Error("failed to get paginated items", err)
+		return nil, err
+	}
+
+	// Calculate total pages
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+
+	return &domain.PaginatedResult[*domain.Item]{
+		Items:      items,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}, nil
+}
+
 func (r *itemRepository) Delete(id string) error {
 	return r.db.Where("id = ?", id).Delete(&domain.Item{}).Error
 }

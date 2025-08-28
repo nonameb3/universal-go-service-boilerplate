@@ -12,12 +12,10 @@ func SetupRoutes(apiV1Group fiber.Router, itemUseCase usecase.ItemUseCase, logge
 
 	itemGroup := apiV1Group.Group("/items")
 	{
+		itemGroup.Get("/", handler.ListItems)
 		itemGroup.Post("/", handler.CreateItem)
 		itemGroup.Get("/:id", handler.GetItem)
 		itemGroup.Put("/:id", handler.UpdateItem)
 		itemGroup.Delete("/:id", handler.DeleteItem)
-
-		// Add more routes here as needed:
-		// itemGroup.Get("/", handler.ListItems)
 	}
 }
