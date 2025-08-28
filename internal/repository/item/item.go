@@ -18,8 +18,12 @@ func NewItemRepository(db *gorm.DB, logger logger.Logger) ItemRepository {
 	}
 }
 
-func (r *itemRepository) Create(item *domain.Item) error {
-	return r.db.Create(item).Error
+func (r *itemRepository) Create(item *domain.Item) (*domain.Item, error) {
+	if err := r.db.Create(item).Error; err != nil {
+		r.logger.Error("failed to create item", err)
+		return nil, err
+	}
+	return item, nil
 }
 
 func (r *itemRepository) Get(id string) (*domain.Item, error) {
@@ -31,8 +35,12 @@ func (r *itemRepository) Get(id string) (*domain.Item, error) {
 	return item, nil
 }
 
-func (r *itemRepository) Update(item *domain.Item) error {
-	return r.db.Save(item).Error
+func (r *itemRepository) Update(item *domain.Item) (*domain.Item, error) {
+	if err := r.db.Save(item).Error; err != nil {
+		r.logger.Error("failed to update item", err)
+		return nil, err
+	}
+	return item, nil
 }
 
 func (r *itemRepository) Delete(id string) error {

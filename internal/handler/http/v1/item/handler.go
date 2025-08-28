@@ -35,7 +35,7 @@ func (h *Handler) CreateItem(c *fiber.Ctx) error {
 		})
 	}
 
-	err := h.itemUseCase.Create(&domain.Item{
+	createItem, err := h.itemUseCase.Create(&domain.Item{
 		Amount: reqBody.Amount,
 		Name:   reqBody.Name,
 	})
@@ -47,21 +47,21 @@ func (h *Handler) CreateItem(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusCreated).JSON(reqBody)
+	return c.Status(http.StatusCreated).JSON(createItem)
 }
 
 // GetItem retrieves an item by ID
 func (h *Handler) GetItem(c *fiber.Ctx) error {
-	request := new(request.GetItem)
+	params := new(request.GetItem)
 
-	if err := c.ParamsParser(request); err != nil {
+	if err := c.ParamsParser(params); err != nil {
 		h.logger.Error("Request Error", err)
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "bad request",
 		})
 	}
 
-	item, err := h.itemUseCase.Get(request.Id)
+	item, err := h.itemUseCase.Get(params.Id)
 	if err != nil {
 		h.logger.Error("Get item error", err)
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{
@@ -70,4 +70,71 @@ func (h *Handler) GetItem(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(item)
+}
+
+func (h *Handler) UpdateItem(c *fiber.Ctx) error {
+	params := new(request.GetItem)
+	body := new(request.UpdateItem)
+
+	if err := c.ParamsParser(params); err != nil {
+		h.logger.Error("Request Error", err)
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "bad request: params id is invalid",
+		})
+	}
+
+	// get item
+	existingItem, err := h.itemUseCase.Get(params.Id)
+	if err != nil {
+		h.logger.Error("Get item error", err)
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "item not found",
+		})
+	}
+
+	// Update only provided fields
+	if body.Name != nil {
+		existingItem.Name = *body.Name
+	}
+	if body.Amount != nil {
+		existingItem.Amount = *body.Amount
+	}
+
+	// Update the existing item
+	updatedItem, err := h.itemUseCase.Update(existingItem)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "update failed"})
+	}
+
+	return c.Status(http.StatusOK).JSON(updatedItem)
+}
+
+func (h *Handler) DeleteItem(c *fiber.Ctx) error {
+	params := new(request.GetItem)
+
+	if err := c.ParamsParser(params); err != nil {
+		h.logger.Error("Request Error", err)
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "bad request: params id is invalid",
+		})
+	}
+
+	// get item
+	_, err := h.itemUseCase.Get(params.Id)
+	if err != nil {
+		h.logger.Error("Get item error", err)
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "item not found",
+		})
+	}
+
+	// delete item
+	if err := h.itemUseCase.Delete(params.Id); err != nil {
+		h.logger.Error("Delete item error", err)
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "delete item error",
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(params)
 }
