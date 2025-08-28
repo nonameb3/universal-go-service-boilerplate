@@ -44,5 +44,5 @@ func (r *itemRepository) Update(item *domain.Item) (*domain.Item, error) {
 }
 
 func (r *itemRepository) Delete(id string) error {
-	return r.db.Delete(&domain.Item{}, id).Error
+	return r.db.Where("id = ?", id).Delete(&domain.Item{}).Error
 }
