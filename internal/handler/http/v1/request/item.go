@@ -18,3 +18,7 @@ type ListItems struct {
 	Page  int `query:"page" json:"page"`
 	Limit int `query:"limit" json:"limit"`
 }
+
+type BulkCreateItems struct {
+	Items []AddItem `json:"items"`
+}

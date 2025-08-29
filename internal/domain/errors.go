@@ -18,4 +18,7 @@ var (
 	ErrInvalidPagination   = errors.New("invalid pagination parameters")
 	ErrPageTooLarge        = errors.New("page number too large")
 	ErrLimitTooLarge       = errors.New("limit too large")
+	
+	// General validation errors
+	ErrInvalidInput        = errors.New("invalid input provided")
 )

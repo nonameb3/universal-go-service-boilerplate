@@ -144,3 +144,34 @@ func (h *Handler) DeleteItem(c *fiber.Ctx) error {
 		"id": id,
 	})
 }
+
+// BulkCreateItems creates multiple items concurrently
+func (h *Handler) BulkCreateItems(c *fiber.Ctx) error {
+	// HTTP request parsing
+	var httpReq request.BulkCreateItems
+	if err := c.BodyParser(&httpReq); err != nil {
+		h.logger.Error("Request parsing error", err)
+		return h.stdResponses.BadRequest(c, "invalid request format")
+	}
+
+	// Convert HTTP request to UseCase request
+	useCaseReq := &dto.BulkCreateRequest{
+		Items: make([]dto.CreateItemRequest, len(httpReq.Items)),
+	}
+	
+	for i, item := range httpReq.Items {
+		useCaseReq.Items[i] = dto.CreateItemRequest{
+			Name:   item.Name,
+			Amount: item.Amount,
+		}
+	}
+
+	// Delegate ALL business logic (including goroutines) to UseCase
+	items, err := h.itemUseCase.BulkCreate(useCaseReq)
+	if err != nil {
+		return h.errorMapper.SendError(c, err)
+	}
+
+	// HTTP response formatting
+	return h.stdResponses.Created(c, items)
+}
