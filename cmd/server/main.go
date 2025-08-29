@@ -47,6 +47,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to get database: %v", err)
 	}
+	defer db.Close()
 	if cfg.Db.AutoMigrate {
 		// Test the database connection first
 		err = db.Health()
@@ -58,5 +59,6 @@ func main() {
 		}
 	}
 
-	app.Run(cfg)
+	// Pass the database instance to app
+	app.Run(cfg, db)
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/universal-go-service/boilerplate/pkg/types"
 )
 
-func Run(cfg *config.Config) {
+func Run(cfg *config.Config, db database.DatabaseProvider) {
 	config := logger.LoggerConfig{
 		Type:        "boilerplate",
 		ServiceName: "go-service",
@@ -22,20 +22,8 @@ func Run(cfg *config.Config) {
 	// Initial Logger
 	l := logger.NewCentralizedLogger(config)
 
-	// Initial Database
-	pg, err := database.NewPostgres(database.DatabaseConfig{
-		Host:     cfg.Db.Host,
-		Port:     cfg.Db.Port,
-		Username: cfg.Db.User,
-		Password: cfg.Db.Password,
-		Database: cfg.Db.DBName,
-		SSLMode:  cfg.Db.SSLMode,
-		Timezone: cfg.Db.TimeZone,
-	})
-	if err != nil {
-		l.Error("database connect error", err)
-	}
-	defer pg.Close()
+	// Use the database instance passed from main.go
+	pg := db
 
 	// Initial UseCase
 	itemUseCase := itemUC.NewItemUseCase(item.NewItemRepository(pg.GetDB(), l), pg, l)
