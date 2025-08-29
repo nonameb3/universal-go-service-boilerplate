@@ -83,13 +83,9 @@ func (uc *itemUseCase) BulkCreate(req *dto.BulkCreateRequest) ([]*entities.Item,
 		namesSeen[item.Name] = true
 	}
 
-	// Business rule: Check for external duplicate names against database
-	for _, item := range itemsToCreate {
-		existingItem, err := uc.itemRepo.GetByName(item.Name)
-		if err == nil && existingItem != nil {
-			uc.logger.Error("Item with same name already exists in database", nil)
-			return nil, domain.ErrItemAlreadyExists
-		}
+	// Business rule: Check for external duplicate names against database in batches
+	if err := uc.checkExternalDuplicatesInBatches(itemsToCreate); err != nil {
+		return nil, err
 	}
 
 	// Process items concurrently using goroutines
@@ -249,5 +245,36 @@ func (uc *itemUseCase) Delete(id string) error {
 	}
 	
 	uc.logger.Info("Item deleted successfully")
+	return nil
+}
+
+// checkExternalDuplicatesInBatches checks for existing items with same names in batches
+func (uc *itemUseCase) checkExternalDuplicatesInBatches(items []*entities.Item) error {
+	const MAX_BATCH_SIZE = 1000
+	
+	for i := 0; i < len(items); i += MAX_BATCH_SIZE {
+		end := min(i+MAX_BATCH_SIZE, len(items))
+		
+		// Extract names from current batch
+		batch := items[i:end]
+		names := make([]string, len(batch))
+		for j, item := range batch {
+			names[j] = item.Name
+		}
+		
+		// Check batch for existing items
+		existingItems, err := uc.itemRepo.GetByNames(names)
+		if err != nil {
+			uc.logger.Error("Failed to check for duplicate names", err)
+			return err
+		}
+		
+		// If any existing items found, return error
+		if len(existingItems) > 0 {
+			uc.logger.Error("Item with same name already exists in database", nil)
+			return domain.ErrItemAlreadyExists
+		}
+	}
+	
 	return nil
 }

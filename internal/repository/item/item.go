@@ -44,6 +44,19 @@ func (r *itemRepository) GetByName(name string) (*entities.Item, error) {
 	return item, nil
 }
 
+func (r *itemRepository) GetByNames(names []string) ([]*entities.Item, error) {
+	if len(names) == 0 {
+		return []*entities.Item{}, nil
+	}
+	
+	var items []*entities.Item
+	if err := r.db.Where("name IN ?", names).Find(&items).Error; err != nil {
+		r.logger.Error("failed to get items by names", err)
+		return nil, err
+	}
+	return items, nil
+}
+
 func (r *itemRepository) Update(item *entities.Item) (*entities.Item, error) {
 	if err := r.db.Save(item).Error; err != nil {
 		r.logger.Error("failed to update item", err)
