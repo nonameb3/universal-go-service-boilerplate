@@ -2,7 +2,7 @@ package errors
 
 import (
 	"net/http"
-	
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/universal-go-service/boilerplate/internal/domain"
 )
@@ -29,37 +29,43 @@ func (em *ErrorMapper) MapDomainError(err error) HTTPError {
 			StatusCode: http.StatusNotFound,
 			Message:    "item not found",
 		}
-		
+
 	case domain.ErrItemNameRequired:
 		return HTTPError{
 			StatusCode: http.StatusBadRequest,
 			Message:    "item name is required",
 		}
-		
+
 	case domain.ErrItemNameTooLong:
 		return HTTPError{
 			StatusCode: http.StatusBadRequest,
 			Message:    "item name cannot exceed 100 characters",
 		}
-		
+
 	case domain.ErrItemAmountTooLarge:
 		return HTTPError{
 			StatusCode: http.StatusBadRequest,
 			Message:    "item amount cannot exceed 999999",
 		}
-		
+
 	case domain.ErrInvalidPagination:
 		return HTTPError{
 			StatusCode: http.StatusBadRequest,
 			Message:    "invalid pagination parameters",
 		}
-		
+
 	case domain.ErrLimitTooLarge:
 		return HTTPError{
 			StatusCode: http.StatusBadRequest,
 			Message:    "limit cannot exceed 100",
 		}
-		
+
+	case domain.ErrItemAlreadyExists:
+		return HTTPError{
+			StatusCode: http.StatusConflict,
+			Message:    "Item with same name already exists",
+		}
+
 	default:
 		return HTTPError{
 			StatusCode: http.StatusInternalServerError,

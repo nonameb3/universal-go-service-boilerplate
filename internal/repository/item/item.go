@@ -36,6 +36,14 @@ func (r *itemRepository) Get(id string) (*entities.Item, error) {
 	return item, nil
 }
 
+func (r *itemRepository) GetByName(name string) (*entities.Item, error) {
+	item := &entities.Item{}
+	if err := r.db.Where("name = ?", name).First(item).Error; err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
 func (r *itemRepository) Update(item *entities.Item) (*entities.Item, error) {
 	if err := r.db.Save(item).Error; err != nil {
 		r.logger.Error("failed to update item", err)

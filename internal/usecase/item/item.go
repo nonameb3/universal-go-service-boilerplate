@@ -44,9 +44,13 @@ func (uc *itemUseCase) Create(req *dto.CreateItemRequest) (*entities.Item, error
 		return nil, err
 	}
 	
-	// Business rule: Check for duplicates (example business logic)
-	// Note: This would require a repository method like GetByName
-	// For now, we'll just proceed with creation
+	// Business rule: Check for duplicate names
+	existingItem, err := uc.itemRepo.GetByName(item.Name)
+	if err == nil && existingItem != nil {
+		uc.logger.Error("Item with same name already exists", nil)
+		return nil, domain.ErrItemAlreadyExists
+	}
+	// If error is "not found", that's expected - continue with creation
 	
 	createdItem, err := uc.itemRepo.Create(item)
 	if err != nil {
@@ -68,6 +72,25 @@ func (uc *itemUseCase) BulkCreate(req *dto.BulkCreateRequest) ([]*entities.Item,
 
 	// Convert to entities for processing
 	itemsToCreate := req.ToEntities()
+
+	// Business rule: Check for internal duplicate names within the same request
+	namesSeen := make(map[string]bool)
+	for _, item := range itemsToCreate {
+		if namesSeen[item.Name] {
+			uc.logger.Error("Duplicate names found in bulk create request", nil)
+			return nil, domain.ErrItemAlreadyExists
+		}
+		namesSeen[item.Name] = true
+	}
+
+	// Business rule: Check for external duplicate names against database
+	for _, item := range itemsToCreate {
+		existingItem, err := uc.itemRepo.GetByName(item.Name)
+		if err == nil && existingItem != nil {
+			uc.logger.Error("Item with same name already exists in database", nil)
+			return nil, domain.ErrItemAlreadyExists
+		}
+	}
 
 	// Process items concurrently using goroutines
 	var wg sync.WaitGroup
@@ -178,6 +201,15 @@ func (uc *itemUseCase) Update(id string, req *dto.UpdateItemRequest) (*entities.
 	
 	// Apply updates using business logic
 	existingItem.UpdateFrom(req.Name, req.Amount)
+	
+	// Business rule: Check for duplicate names if name is being updated
+	if req.Name != nil && *req.Name != "" {
+		duplicateItem, err := uc.itemRepo.GetByName(*req.Name)
+		if err == nil && duplicateItem != nil && duplicateItem.Id != existingItem.Id {
+			uc.logger.Error("Item with same name already exists", nil)
+			return nil, domain.ErrItemAlreadyExists
+		}
+	}
 	
 	// Domain validation after update using validator
 	if err := uc.validator.ValidateItem(existingItem); err != nil {
