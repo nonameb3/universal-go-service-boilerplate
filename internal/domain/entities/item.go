@@ -7,8 +7,8 @@ import (
 // Item represents the item business entity
 type Item struct {
 	BaseEntity
-	Amount uint   `json:"amount"`
-	Name   string `json:"name"`
+	Amount uint   `json:"amount" gorm:"not null;default:0"`
+	Name   string `json:"name" gorm:"not null;uniqueIndex:idx_items_name"`
 }
 
 // UpdateFrom applies partial updates to the item with business rules

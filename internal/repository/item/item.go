@@ -20,7 +20,11 @@ func NewItemRepository(db *gorm.DB, logger logger.Logger) ItemRepository {
 }
 
 func (r *itemRepository) Create(item *entities.Item) (*entities.Item, error) {
-	if err := r.db.Create(item).Error; err != nil {
+	return r.CreateWithTx(r.db, item)
+}
+
+func (r *itemRepository) CreateWithTx(tx *gorm.DB, item *entities.Item) (*entities.Item, error) {
+	if err := tx.Create(item).Error; err != nil {
 		r.logger.Error("failed to create item", err)
 		return nil, err
 	}
@@ -28,8 +32,12 @@ func (r *itemRepository) Create(item *entities.Item) (*entities.Item, error) {
 }
 
 func (r *itemRepository) Get(id string) (*entities.Item, error) {
+	return r.GetWithTx(r.db, id)
+}
+
+func (r *itemRepository) GetWithTx(tx *gorm.DB, id string) (*entities.Item, error) {
 	item := &entities.Item{}
-	if err := r.db.Where("id = ?", id).First(item).Error; err != nil {
+	if err := tx.Where("id = ?", id).First(item).Error; err != nil {
 		r.logger.Error("failed to get item", err)
 		return nil, err
 	}
@@ -37,20 +45,37 @@ func (r *itemRepository) Get(id string) (*entities.Item, error) {
 }
 
 func (r *itemRepository) GetByName(name string) (*entities.Item, error) {
+	return r.GetByNameWithTx(r.db, name)
+}
+
+func (r *itemRepository) GetByNameWithTx(tx *gorm.DB, name string) (*entities.Item, error) {
 	item := &entities.Item{}
-	if err := r.db.Where("name = ?", name).First(item).Error; err != nil {
-		return nil, err
+	if err := tx.Where("name = ?", name).First(item).Error; err != nil {
+		return nil, err // Don't log "not found" as error - it's expected business case
+	}
+	return item, nil
+}
+
+// GetByNameForUpdate uses SELECT FOR UPDATE for pessimistic locking
+func (r *itemRepository) GetByNameForUpdate(tx *gorm.DB, name string) (*entities.Item, error) {
+	item := &entities.Item{}
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").Where("name = ?", name).First(item).Error; err != nil {
+		return nil, err // Don't log "not found" as error - it's expected business case
 	}
 	return item, nil
 }
 
 func (r *itemRepository) GetByNames(names []string) ([]*entities.Item, error) {
+	return r.GetByNamesWithTx(r.db, names)
+}
+
+func (r *itemRepository) GetByNamesWithTx(tx *gorm.DB, names []string) ([]*entities.Item, error) {
 	if len(names) == 0 {
 		return []*entities.Item{}, nil
 	}
 	
 	var items []*entities.Item
-	if err := r.db.Where("name IN ?", names).Find(&items).Error; err != nil {
+	if err := tx.Where("name IN ?", names).Find(&items).Error; err != nil {
 		r.logger.Error("failed to get items by names", err)
 		return nil, err
 	}
@@ -58,7 +83,11 @@ func (r *itemRepository) GetByNames(names []string) ([]*entities.Item, error) {
 }
 
 func (r *itemRepository) Update(item *entities.Item) (*entities.Item, error) {
-	if err := r.db.Save(item).Error; err != nil {
+	return r.UpdateWithTx(r.db, item)
+}
+
+func (r *itemRepository) UpdateWithTx(tx *gorm.DB, item *entities.Item) (*entities.Item, error) {
+	if err := tx.Save(item).Error; err != nil {
 		r.logger.Error("failed to update item", err)
 		return nil, err
 	}
@@ -97,5 +126,9 @@ func (r *itemRepository) GetWithPagination(page, limit int) (*types.PaginatedRes
 }
 
 func (r *itemRepository) Delete(id string) error {
-	return r.db.Where("id = ?", id).Delete(&entities.Item{}).Error
+	return r.DeleteWithTx(r.db, id)
+}
+
+func (r *itemRepository) DeleteWithTx(tx *gorm.DB, id string) error {
+	return tx.Where("id = ?", id).Delete(&entities.Item{}).Error
 }

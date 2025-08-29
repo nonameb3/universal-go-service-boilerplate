@@ -38,7 +38,7 @@ func Run(cfg *config.Config) {
 	defer pg.Close()
 
 	// Initial UseCase
-	itemUseCase := itemUC.NewItemUseCase(item.NewItemRepository(pg.GetDB(), l), l)
+	itemUseCase := itemUC.NewItemUseCase(item.NewItemRepository(pg.GetDB(), l), pg, l)
 
 	// Initial Server
 	httpServer := httpserver.New(cfg.Server.Port)
