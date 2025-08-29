@@ -3,19 +3,22 @@ package item
 import (
 	"github.com/universal-go-service/boilerplate/internal/domain/entities"
 	"github.com/universal-go-service/boilerplate/internal/domain/types"
+	"github.com/universal-go-service/boilerplate/pkg/errors"
 	logger "github.com/universal-go-service/boilerplate/pkg/providers/logger"
 	"gorm.io/gorm"
 )
 
 type itemRepository struct {
-	db     *gorm.DB
-	logger logger.Logger
+	db         *gorm.DB
+	logger     logger.Logger
+	errHandler *errors.ErrorHandler
 }
 
 func NewItemRepository(db *gorm.DB, logger logger.Logger) ItemRepository {
 	return &itemRepository{
-		db:     db,
-		logger: logger,
+		db:         db,
+		logger:     logger,
+		errHandler: errors.NewErrorHandler(),
 	}
 }
 
@@ -24,9 +27,12 @@ func (r *itemRepository) Create(item *entities.Item) (*entities.Item, error) {
 }
 
 func (r *itemRepository) CreateWithTx(tx *gorm.DB, item *entities.Item) (*entities.Item, error) {
-	if err := tx.Create(item).Error; err != nil {
-		r.logger.Error("failed to create item", err)
-		return nil, err
+	err := tx.Create(item).Error
+	if err != nil {
+		// Map database errors to domain errors
+		mappedErr := r.errHandler.MapDatabaseError(err)
+		r.logger.Error("failed to create item", mappedErr)
+		return nil, mappedErr
 	}
 	return item, nil
 }
@@ -73,7 +79,7 @@ func (r *itemRepository) GetByNamesWithTx(tx *gorm.DB, names []string) ([]*entit
 	if len(names) == 0 {
 		return []*entities.Item{}, nil
 	}
-	
+
 	var items []*entities.Item
 	if err := tx.Where("name IN ?", names).Find(&items).Error; err != nil {
 		r.logger.Error("failed to get items by names", err)
