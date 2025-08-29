@@ -1,4 +1,4 @@
-package domain
+package types
 
 // PaginatedResult represents paginated query results - generic for any entity type
 type PaginatedResult[T any] struct {

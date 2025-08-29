@@ -4,24 +4,30 @@ import (
 	"errors"
 	
 	"github.com/universal-go-service/boilerplate/internal/domain"
+	"github.com/universal-go-service/boilerplate/internal/domain/entities"
+	"github.com/universal-go-service/boilerplate/internal/domain/types"
+	"github.com/universal-go-service/boilerplate/internal/domain/validation"
 	"github.com/universal-go-service/boilerplate/internal/repository"
+	"github.com/universal-go-service/boilerplate/internal/usecase/item/dto"
 	logger "github.com/universal-go-service/boilerplate/pkg/providers/logger"
 )
 
 type itemUseCase struct {
-	itemRepo repository.ItemRepo
-	logger   logger.Logger
+	itemRepo  repository.ItemRepo
+	logger    logger.Logger
+	validator *validation.ItemValidator
 }
 
 func NewItemUseCase(itemRepo repository.ItemRepo, logger logger.Logger) ItemUseCase {
 	return &itemUseCase{
-		itemRepo: itemRepo,
-		logger:   logger,
+		itemRepo:  itemRepo,
+		logger:    logger,
+		validator: validation.NewItemValidator(),
 	}
 }
 
 // Create implements business logic for creating an item
-func (uc *itemUseCase) Create(req *CreateItemRequest) (*domain.Item, error) {
+func (uc *itemUseCase) Create(req *dto.CreateItemRequest) (*entities.Item, error) {
 	// Business validation
 	if err := req.Validate(); err != nil {
 		uc.logger.Error("Create item validation failed", err)
@@ -31,8 +37,8 @@ func (uc *itemUseCase) Create(req *CreateItemRequest) (*domain.Item, error) {
 	// Convert to domain entity
 	item := req.ToEntity()
 	
-	// Domain validation
-	if err := item.Validate(); err != nil {
+	// Domain validation using validator
+	if err := uc.validator.ValidateItem(item); err != nil {
 		uc.logger.Error("Create item domain validation failed", err)
 		return nil, err
 	}
@@ -52,7 +58,7 @@ func (uc *itemUseCase) Create(req *CreateItemRequest) (*domain.Item, error) {
 }
 
 // Get implements business logic for retrieving an item
-func (uc *itemUseCase) Get(id string) (*domain.Item, error) {
+func (uc *itemUseCase) Get(id string) (*entities.Item, error) {
 	if id == "" {
 		return nil, domain.ErrInvalidPagination // Using available error for now
 	}
@@ -67,7 +73,7 @@ func (uc *itemUseCase) Get(id string) (*domain.Item, error) {
 }
 
 // GetWithPagination implements business logic for paginated retrieval
-func (uc *itemUseCase) GetWithPagination(req *PaginationRequest) (*domain.PaginatedResult[*domain.Item], error) {
+func (uc *itemUseCase) GetWithPagination(req *dto.PaginationRequest) (*types.PaginatedResult[*entities.Item], error) {
 	// Apply business defaults
 	req.ApplyDefaults()
 	
@@ -87,7 +93,7 @@ func (uc *itemUseCase) GetWithPagination(req *PaginationRequest) (*domain.Pagina
 }
 
 // Update implements business logic for updating an item
-func (uc *itemUseCase) Update(id string, req *UpdateItemRequest) (*domain.Item, error) {
+func (uc *itemUseCase) Update(id string, req *dto.UpdateItemRequest) (*entities.Item, error) {
 	if id == "" {
 		return nil, domain.ErrInvalidPagination // Using available error for now
 	}
@@ -113,8 +119,8 @@ func (uc *itemUseCase) Update(id string, req *UpdateItemRequest) (*domain.Item, 
 	// Apply updates using business logic
 	existingItem.UpdateFrom(req.Name, req.Amount)
 	
-	// Domain validation after update
-	if err := existingItem.Validate(); err != nil {
+	// Domain validation after update using validator
+	if err := uc.validator.ValidateItem(existingItem); err != nil {
 		uc.logger.Error("Update item domain validation failed", err)
 		return nil, err
 	}

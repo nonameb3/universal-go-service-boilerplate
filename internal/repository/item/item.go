@@ -1,7 +1,8 @@
 package item
 
 import (
-	"github.com/universal-go-service/boilerplate/internal/domain"
+	"github.com/universal-go-service/boilerplate/internal/domain/entities"
+	"github.com/universal-go-service/boilerplate/internal/domain/types"
 	logger "github.com/universal-go-service/boilerplate/pkg/providers/logger"
 	"gorm.io/gorm"
 )
@@ -18,7 +19,7 @@ func NewItemRepository(db *gorm.DB, logger logger.Logger) ItemRepository {
 	}
 }
 
-func (r *itemRepository) Create(item *domain.Item) (*domain.Item, error) {
+func (r *itemRepository) Create(item *entities.Item) (*entities.Item, error) {
 	if err := r.db.Create(item).Error; err != nil {
 		r.logger.Error("failed to create item", err)
 		return nil, err
@@ -26,8 +27,8 @@ func (r *itemRepository) Create(item *domain.Item) (*domain.Item, error) {
 	return item, nil
 }
 
-func (r *itemRepository) Get(id string) (*domain.Item, error) {
-	item := &domain.Item{}
+func (r *itemRepository) Get(id string) (*entities.Item, error) {
+	item := &entities.Item{}
 	if err := r.db.Where("id = ?", id).First(item).Error; err != nil {
 		r.logger.Error("failed to get item", err)
 		return nil, err
@@ -35,7 +36,7 @@ func (r *itemRepository) Get(id string) (*domain.Item, error) {
 	return item, nil
 }
 
-func (r *itemRepository) Update(item *domain.Item) (*domain.Item, error) {
+func (r *itemRepository) Update(item *entities.Item) (*entities.Item, error) {
 	if err := r.db.Save(item).Error; err != nil {
 		r.logger.Error("failed to update item", err)
 		return nil, err
@@ -43,12 +44,12 @@ func (r *itemRepository) Update(item *domain.Item) (*domain.Item, error) {
 	return item, nil
 }
 
-func (r *itemRepository) GetWithPagination(page, limit int) (*domain.PaginatedResult[*domain.Item], error) {
-	var items []*domain.Item
+func (r *itemRepository) GetWithPagination(page, limit int) (*types.PaginatedResult[*entities.Item], error) {
+	var items []*entities.Item
 	var total int64
 
 	// Count total records
-	if err := r.db.Model(&domain.Item{}).Count(&total).Error; err != nil {
+	if err := r.db.Model(&entities.Item{}).Count(&total).Error; err != nil {
 		r.logger.Error("failed to count items", err)
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func (r *itemRepository) GetWithPagination(page, limit int) (*domain.PaginatedRe
 	// Calculate total pages
 	totalPages := int((total + int64(limit) - 1) / int64(limit))
 
-	return &domain.PaginatedResult[*domain.Item]{
+	return &types.PaginatedResult[*entities.Item]{
 		Items:      items,
 		Total:      total,
 		Page:       page,
@@ -75,5 +76,5 @@ func (r *itemRepository) GetWithPagination(page, limit int) (*domain.PaginatedRe
 }
 
 func (r *itemRepository) Delete(id string) error {
-	return r.db.Where("id = ?", id).Delete(&domain.Item{}).Error
+	return r.db.Where("id = ?", id).Delete(&entities.Item{}).Error
 }
