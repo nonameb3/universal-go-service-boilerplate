@@ -46,12 +46,21 @@ help:
 	@echo "  make build-all    - Build binaries for all platforms"
 	@echo ""
 	@echo "Testing & Quality:"
-	@echo "  make test         - Run all tests"
-	@echo "  make test-verbose - Run tests with verbose output"
-	@echo "  make test-cover   - Run tests with coverage report"
-	@echo "  make lint         - Run linter (requires golangci-lint)"
-	@echo "  make fmt          - Format code"
-	@echo "  make vet          - Run go vet"
+	@echo "  make test              - Run all tests"
+	@echo "  make test-unit         - Run unit tests only"
+	@echo "  make test-integration  - Run integration tests only"
+	@echo "  make test-cover        - Run tests with coverage report"
+	@echo "  make test-cover-threshold - Run tests with 70% coverage requirement"
+	@echo "  make test-domain       - Run domain layer tests"
+	@echo "  make test-repository   - Run repository layer tests"
+	@echo "  make test-usecase      - Run usecase layer tests"
+	@echo "  make test-handler      - Run handler layer tests"
+	@echo "  make test-race         - Run race condition tests"
+	@echo "  make test-bench        - Run benchmark tests"
+	@echo "  make test-clean        - Clean test artifacts"
+	@echo "  make lint              - Run linter (requires golangci-lint)"
+	@echo "  make fmt               - Format code"
+	@echo "  make vet               - Run go vet"
 	@echo ""
 	@echo "Dependencies:"
 	@echo "  make install      - Install development tools"
@@ -132,6 +141,85 @@ test-cover: deps
 	@$(GOCMD) tool cover -html=coverage.out -o coverage.html
 	@echo "📊 Coverage report generated: coverage.html"
 
+# Run unit tests only (exclude integration)
+test-unit: deps
+	@echo "🧪 Running unit tests..."
+	@$(GOTEST) -v -short ./internal/domain/... ./internal/repository/... ./internal/usecase/... ./internal/handler/...
+
+# Run integration tests only
+test-integration: deps
+	@echo "🧪 Running integration tests..."
+	@$(GOTEST) -v ./testing/integration/...
+
+# Run tests by layer
+test-domain: deps
+	@echo "🧪 Running domain layer tests..."
+	@$(GOTEST) -v ./internal/domain/...
+
+test-repository: deps
+	@echo "🧪 Running repository layer tests..."
+	@$(GOTEST) -v ./internal/repository/...
+
+test-usecase: deps
+	@echo "🧪 Running usecase layer tests..."
+	@$(GOTEST) -v ./internal/usecase/...
+
+test-handler: deps
+	@echo "🧪 Running handler layer tests..."
+	@$(GOTEST) -v ./internal/handler/...
+
+# Run race condition tests
+test-race: deps
+	@echo "🧪 Running race condition tests..."
+	@if [ -f "./scripts/run_race_tests.sh" ]; then \
+		chmod +x ./scripts/run_race_tests.sh && ./scripts/run_race_tests.sh; \
+	else \
+		echo "⚠️  Race condition test script not found"; \
+	fi
+
+# Generate test coverage by layer
+test-cover-detailed: deps
+	@echo "🧪 Running detailed coverage analysis..."
+	@mkdir -p coverage
+	@echo "📋 Domain Layer Coverage:"
+	@$(GOTEST) -v -race -coverprofile=coverage/domain.out ./internal/domain/... || echo "⚠️  Domain tests failed"
+	@echo "📋 Repository Layer Coverage:"
+	@$(GOTEST) -v -race -coverprofile=coverage/repository.out ./internal/repository/... || echo "⚠️  Repository tests failed"
+	@echo "📋 UseCase Layer Coverage:"
+	@$(GOTEST) -v -race -coverprofile=coverage/usecase.out ./internal/usecase/... || echo "⚠️  UseCase tests failed"
+	@echo "📋 Handler Layer Coverage:"
+	@$(GOTEST) -v -race -coverprofile=coverage/handler.out ./internal/handler/... || echo "⚠️  Handler tests failed"
+	@echo "📊 Layer-specific coverage reports generated in coverage/"
+	@echo "📈 Coverage Summary:"
+	@ls -la coverage/ 2>/dev/null || echo "No coverage files generated"
+
+# Test with minimum coverage threshold
+test-cover-threshold: deps
+	@echo "🧪 Running tests with coverage threshold..."
+	@$(GOTEST) -v -race -coverprofile=coverage.out ./...
+	@$(GOCMD) tool cover -func=coverage.out | grep "total:" | awk '{print "Coverage: " $$3}' | tee coverage.txt
+	@if [ -f coverage.txt ]; then \
+		COVERAGE=$$(grep -o '[0-9.]*' coverage.txt | head -1); \
+		if [ "$$(echo "$$COVERAGE < 70" | bc)" -eq 1 ]; then \
+			echo "❌ Coverage $$COVERAGE% is below 70% threshold"; \
+			exit 1; \
+		else \
+			echo "✅ Coverage $$COVERAGE% meets threshold"; \
+		fi; \
+	fi
+
+# Run benchmark tests
+test-bench: deps
+	@echo "🏃 Running benchmark tests..."
+	@$(GOTEST) -bench=. -benchmem ./...
+
+# Clean test artifacts
+test-clean:
+	@echo "🧹 Cleaning test artifacts..."
+	@rm -f coverage.out coverage.html coverage.txt
+	@rm -rf coverage/
+	@echo "✅ Test artifacts cleaned"
+
 # Format code
 fmt:
 	@echo "📝 Formatting code..."
@@ -165,7 +253,7 @@ install:
 # Download dependencies
 deps:
 	@echo "📦 Downloading dependencies..."
-	@$(GOGET) -d ./...
+	@$(GOMOD) download
 
 # Clean up dependencies
 tidy:

@@ -17,6 +17,10 @@ func NewItemValidator() *ItemValidator {
 
 // ValidateItem performs business validation on the Item entity
 func (v *ItemValidator) ValidateItem(item *entities.Item) error {
+	if item == nil {
+		return domain.ErrItemNameRequired // or create a new error for nil item
+	}
+	
 	if strings.TrimSpace(item.Name) == "" {
 		return domain.ErrItemNameRequired
 	}
@@ -50,6 +54,19 @@ func (v *ItemValidator) ValidateName(name string) error {
 func (v *ItemValidator) ValidateAmount(amount uint) error {
 	if amount > 999999 {
 		return domain.ErrItemAmountTooLarge
+	}
+	
+	return nil
+}
+
+// ValidatePagination validates pagination parameters
+func (v *ItemValidator) ValidatePagination(page, limit int) error {
+	if page <= 0 || limit <= 0 {
+		return domain.ErrInvalidPagination
+	}
+	
+	if limit > 100 {
+		return domain.ErrLimitTooLarge
 	}
 	
 	return nil

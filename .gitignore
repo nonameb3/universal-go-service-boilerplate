@@ -92,3 +92,6 @@ go.sum
 
 # LLM
 CLAUDE.md
+
+# test
+coverage/*
