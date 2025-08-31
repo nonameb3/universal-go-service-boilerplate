@@ -261,6 +261,73 @@ func (s *ItemIntegrationTestSuite) TestPaginationIntegration() {
 	s.Assert().Equal(3, page3Response.Page)
 }
 
+// Test cache behavior for GET requests
+func (s *ItemIntegrationTestSuite) TestCacheIntegration() {
+	// Create an item to cache
+	createRequest := request.AddItem{
+		Name:   "Cache Test Item",
+		Amount: 100,
+	}
+	
+	bodyBytes, err := json.Marshal(createRequest)
+	s.Require().NoError(err)
+	
+	req := httptest.NewRequest("POST", "/api/v1/items", bytes.NewReader(bodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	
+	resp, err := s.app.Test(req, 5000)
+	s.Require().NoError(err)
+	s.Assert().Equal(201, resp.StatusCode)
+	
+	// Parse create response to get ID
+	var createResp entities.Item
+	err = json.NewDecoder(resp.Body).Decode(&createResp)
+	s.Require().NoError(err)
+	itemID := createResp.Id.String()
+	
+	// === CACHE TEST: Individual Item ===
+	// First request - should hit database and cache the result
+	req1 := httptest.NewRequest("GET", "/api/v1/items/"+itemID, nil)
+	resp1, err := s.app.Test(req1, 5000)
+	s.Require().NoError(err)
+	s.Assert().Equal(200, resp1.StatusCode)
+	
+	// Check cache headers are present
+	s.Assert().NotEmpty(resp1.Header.Get("Cache-Control"))
+	
+	// Second request - should hit cache (faster response)
+	req2 := httptest.NewRequest("GET", "/api/v1/items/"+itemID, nil)
+	resp2, err := s.app.Test(req2, 5000)
+	s.Require().NoError(err)
+	s.Assert().Equal(200, resp2.StatusCode)
+	
+	// Verify both responses have same content
+	var item1, item2 entities.Item
+	err = json.NewDecoder(resp1.Body).Decode(&item1)
+	s.Require().NoError(err)
+	err = json.NewDecoder(resp2.Body).Decode(&item2)
+	s.Require().NoError(err)
+	
+	s.Assert().Equal(item1.Id, item2.Id)
+	s.Assert().Equal(item1.Name, item2.Name)
+	s.Assert().Equal(item1.Amount, item2.Amount)
+	
+	// === CACHE TEST: List Items ===
+	req3 := httptest.NewRequest("GET", "/api/v1/items?page=1&limit=10", nil)
+	resp3, err := s.app.Test(req3, 5000)
+	s.Require().NoError(err)
+	s.Assert().Equal(200, resp3.StatusCode)
+	
+	// Check cache headers for list endpoint
+	s.Assert().NotEmpty(resp3.Header.Get("Cache-Control"))
+	
+	// Second request to list - should hit cache
+	req4 := httptest.NewRequest("GET", "/api/v1/items?page=1&limit=10", nil)
+	resp4, err := s.app.Test(req4, 5000)
+	s.Require().NoError(err)
+	s.Assert().Equal(200, resp4.StatusCode)
+}
+
 // Test bulk creation with transaction rollback
 func (s *ItemIntegrationTestSuite) TestBulkCreationIntegration() {
 	bulkRequest := request.BulkCreateItems{
