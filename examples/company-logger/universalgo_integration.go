@@ -27,9 +27,9 @@ type UniversalGoLogger struct {
 // NewUniversalGoLogger creates a new Universal-Go logger that implements the universal Logger interface
 func NewUniversalGoLogger(config LoggerConfig) (Logger, error) {
 	// In real implementation, this would initialize the Universal-Go logger:
-	// tkxLogger := tkxLogger.NewTkxLogger(tkxLogger.LoggerConfig{
+	// universalGoLogger := universalGoLogger.NewUniversalGoLogger(universalGoLogger.LoggerConfig{
 	//     ServiceName: config.ServiceName,
-	//     LogLevel:    tkxLoggerConstants.InfoLevel,
+	//     LogLevel:    universalGoLoggerConstants.InfoLevel,
 	// })
 
 	return &UniversalGoLogger{
@@ -44,7 +44,7 @@ func NewUniversalGoLogger(config LoggerConfig) (Logger, error) {
 // Info logs an info message through Universal-Go's centralized system
 func (u *UniversalGoLogger) Info(msg string, fields ...types.Field) {
 	// Universal-Go implementation would forward to their OpenSearch cluster:
-	// u.tkxLogger.WithFields(convertFieldsToLogrus(fields)).Info(msg)
+	// u.universalGoLogger.WithFields(convertFieldsToLogrus(fields)).Info(msg)
 
 	// Demo implementation:
 	fmt.Printf("[Universal-Go Logger] INFO: %s | service=%s", msg, u.serviceName)
@@ -60,7 +60,7 @@ func (u *UniversalGoLogger) Info(msg string, fields ...types.Field) {
 // Error logs an error message through Universal-Go's centralized system
 func (u *UniversalGoLogger) Error(msg string, err error, fields ...types.Field) {
 	// Universal-Go implementation:
-	// u.tkxLogger.WithFields(convertFieldsToLogrus(fields)).WithError(err).Error(msg)
+	// u.universalGoLogger.WithFields(convertFieldsToLogrus(fields)).WithError(err).Error(msg)
 
 	// Demo implementation:
 	fmt.Printf("[Universal-Go Logger] ERROR: %s | service=%s", msg, u.serviceName)
@@ -79,7 +79,7 @@ func (u *UniversalGoLogger) Error(msg string, err error, fields ...types.Field) 
 // Debug logs a debug message (Universal-Go might filter based on environment)
 func (u *UniversalGoLogger) Debug(msg string, fields ...types.Field) {
 	// Universal-Go implementation:
-	// u.tkxLogger.WithFields(convertFieldsToLogrus(fields)).Debug(msg)
+	// u.universalGoLogger.WithFields(convertFieldsToLogrus(fields)).Debug(msg)
 
 	// Demo implementation:
 	fmt.Printf("[Universal-Go Logger] DEBUG: %s | service=%s", msg, u.serviceName)
@@ -95,7 +95,7 @@ func (u *UniversalGoLogger) Debug(msg string, fields ...types.Field) {
 // Warn logs a warning message
 func (u *UniversalGoLogger) Warn(msg string, fields ...types.Field) {
 	// Universal-Go implementation:
-	// u.tkxLogger.WithFields(convertFieldsToLogrus(fields)).Warn(msg)
+	// u.universalGoLogger.WithFields(convertFieldsToLogrus(fields)).Warn(msg)
 
 	// Demo implementation:
 	fmt.Printf("[Universal-Go Logger] WARN: %s | service=%s", msg, u.serviceName)
