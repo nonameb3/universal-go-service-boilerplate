@@ -23,6 +23,7 @@ func main() {
 	fmt.Printf("🏠 Server: %s:%d\n", cfg.Server.Host, cfg.Server.Port)
 	fmt.Printf("📦 App: %s v%s\n", cfg.App.Name, cfg.App.Version)
 	fmt.Printf("🔧 Database: %s:%v@%s:%s\n", cfg.Db.Host, cfg.Db.Port, cfg.Db.User, cfg.Db.Password)
+	fmt.Printf("🔧 Database auto-migrate: %v/n", cfg.Db.AutoMigrate)
 	fmt.Printf("🔧 Debug mode: %t\n\n", cfg.App.Debug)
 
 	fmt.Printf("\n✅ Universal Go Service Boilerplate is ready!\n\n")
